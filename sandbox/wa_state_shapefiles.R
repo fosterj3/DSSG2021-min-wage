@@ -37,7 +37,7 @@ sub_tracts <- census_tract_10_sf %>%
 
 # visualize tracts
 ggplot() +
-  geom_sf(data = sub_tracts,aes(fill = POP10)) + 
+  geom_sf(data = sub_tracts,aes(fill = POPWHITE)) + 
   scale_fill_distiller(palette = "Purples", trans = "reverse") + 
   labs(fill = "population", title = "Overall population in Snohomish, King and Pierce County", subtitle = "Washington State") +
   theme_void()
@@ -58,4 +58,13 @@ ggplot() +
   labs(fill = "population", title = "Overall population in Snohomish, King and Pierce County", subtitle = "Washington State") +
   theme_void() +
   facet_wrap(~race)
+
+
+ggplot() +
+  geom_sf(data = census_tract_10_sf,aes(fill = POPWHITE)) + 
+  scale_fill_distiller(palette = "Purples", trans = "reverse") + 
+  labs(fill = "population", title = "") +
+  theme_void() + theme(legend.position = "none")
+
+
 
