@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+# Packages Used 
 library(rio)
 library(dplyr)
 library(janitor)
@@ -17,8 +18,8 @@ library(tidyr)
 library(stringr)
 ```
 
-
 ```{r}
+# Import the HUD Data for 2010/11 to 2017
 hud10_11 <- import(file = "https://www.huduser.gov/portal/datasets/fmr/fmr2011f/fy2011_equiv_zc_rents_acs.xls")
 hud12 <- import(file = "https://www.huduser.gov/portal/datasets/fmr/fmr2012f/small_area_fmrs_fy2012.xls")
 hud13 <- import(file = "https://www.huduser.gov/portal/datasets/fmr/fmr2013p/small_area_fmrs_fy2013.xls")
@@ -29,6 +30,7 @@ hud17 <- import(file = "https://www.huduser.gov/portal/datasets/fmr/fmr2017/FY20
 ```
 
 ```{r}
+# Make the variable names lowercase 
 hud10_11 <- hud10_11 %>% clean_names()
 hud15 <- hud15 %>% clean_names()
 hud16 <- hud16 %>% clean_names()
@@ -53,6 +55,7 @@ hud12_14 <- bind_rows(hud12, hud13, hud14) %>% clean_names() %>%
 ```
 
 ```{r}
+# Rename and cut/add variables
 hud10_11 <- hud10_11 %>% 
   select(-c(state, county)) %>% 
 rename(
@@ -61,6 +64,7 @@ cbsa = cbsamet) %>%
 ```
 
 ```{r}
+# Rename and cut/add variables
 hud15 <- hud15 %>% 
   select(-c(state, statename, county)) %>% 
 rename(
@@ -72,6 +76,7 @@ cbsa_name = cbnsmcnm) %>%
 ```
 
 ```{r}
+# Rename and cut/add variables
 hud16 <- hud16 %>% 
   select(-c(fips_state_code, fips_county_code, statename)) %>% 
 rename(
@@ -82,6 +87,7 @@ zip = zip_code) %>%
 ```
 
 ```{r}
+# Rename and add variables
 hud17 <- hud17 %>% 
 rename(
 cbsa = metro_code,
@@ -91,18 +97,25 @@ zip = zip_code) %>%
 ```
 
 ```{r}
+# Combine the datasets 
 hud_full <- plyr::rbind.fill(hud12_14, hud10_11, hud15, hud16, hud17)
 ```
 
 ```{r}
-hud_full %>% 
+# Filter data for only Washington State 
+hud_df <- hud_full %>% 
   separate(cbsa_name, into = c("city", "region"), sep = ",") %>%
   mutate(region = str_trim(region)) %>% 
   filter(region == "WA MSA") %>% 
-  View()
+  rename(
+    region = city,
+    state = region) %>%
+  mutate(state = "WA")
 ```
 
-
+```{r}
+#Wrangle data to make it long 
+```
 
 
 
