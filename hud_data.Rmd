@@ -42,7 +42,7 @@ hud17 <- hud17 %>% clean_names()
 ```
 
 ```{r}
-#Combine hud 12-14
+#Combine hud 12-14 since they have the same variables 
 hud12 <- hud12 %>% 
   mutate(year = 2012)
 
