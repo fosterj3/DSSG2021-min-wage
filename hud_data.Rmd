@@ -16,6 +16,9 @@ library(dplyr)
 library(janitor)
 library(tidyr)
 library(stringr)
+library(ggdist)
+library(ggplot2)
+library(tidy)
 ```
 
 ```{r}
@@ -114,9 +117,69 @@ hud_df <- hud_full %>%
 ```
 
 ```{r}
-#Wrangle data to make it long 
+#Wrangle data to make it long
+hud_long <- hud_df %>% 
+  rename(
+    county = county_name,
+    Studio = area_rent_br0,
+    `One Bedroom` = area_rent_br1,
+    `Two Bedrooms` = area_rent_br2,
+    `Three Bedrooms` = area_rent_br3,
+    `Four Bedrooms` = area_rent_br4) %>% 
+  pivot_longer(c(Studio, `One Bedroom`, `Two Bedrooms`, `Three Bedrooms`, `Four Bedrooms`), names_to = "Bedrooms", values_to = "Rent")
 ```
 
+```{r}
+# Make region and bedroom a factor with specific levels 
+hud_long$Bedrooms <- factor(hud_long$Bedrooms, 
+                         levels = c("Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four Bedrooms"))
+
+hud_long$region <- factor(hud_long$region)
+```
+
+```{r}
+hud_long %>%
+    filter(region == "Seattle-Tacoma-Bellevue") %>% 
+    ggplot(aes(x = factor(Bedrooms), y = Rent, fill = factor(Bedrooms))) +
+
+    # add half-violin from {ggdist} package
+    ggdist::stat_halfeye(
+        ## custom bandwidth
+        adjust = 0.5,
+        ## move geom to the right
+        justification = -.2,
+        ## remove slab interval
+        .width = 0,
+        point_colour = NA
+    ) +
+    geom_boxplot(
+        width = .12,
+        ## remove outliers
+        outlier.color = NA,
+        alpha = 0.5
+    ) +
+    # Add dot plots from {ggdist} package
+    ggdist::stat_dots(
+        ## orientation to the left
+        side = "left",
+        ## move geom to the left
+        justification = 1.1,
+        ## adjust grouping (binning) of observations
+        binwidth = .25
+    ) +
+    # Adjust theme
+    scale_fill_tq() +
+    theme_tq() +
+    labs(
+        title = "Distribution of Fair Market Housing in Washington State",
+        subtitle = "For the Seattle-Tacoma-Bellevue Region",
+        caption = "Data from Department of Housing and Urban Development",
+        x = "Number of Bedrooms",
+        y = "Rental Price",
+        fill = "Bedrooms") +
+  scale_y_discrete(limits = c(400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400)) +
+    coord_flip() 
+```
 
 
 
