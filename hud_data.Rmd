@@ -172,10 +172,9 @@ hud_gif <- hud_long %>%
     scale_fill_tq() +
     theme_tq() +
     labs(
-        title = "Distribution of Fair Market Housing in Washington State",
-        subtitle = "For the Seattle-Tacoma-Bellevue Region",
+        subtitle = "Distribution of Fair Market Housing in the Seattle-Tacoma-Bellevue Region",
         caption = "Data from Department of Housing and Urban Development",
-        x = "Number of Bedrooms",
+        x = "",
         y = "Rental Price",
         fill = "Bedrooms") +
   theme(legend.position = "none") +
@@ -184,7 +183,7 @@ hud_gif <- hud_long %>%
   transition_time(year) +
   labs(title = "Year: {frame_time}") 
 
-animate(hud_gif, height = 4, width = 6, units = "in", res = 150)
+animate(hud_gif, height = 10, width = 15, units = "in", res = 150)
 anim_save("hud_gif.gif")
 ```
 
