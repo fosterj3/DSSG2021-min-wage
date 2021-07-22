@@ -18,6 +18,7 @@ library(tidyr)
 library(stringr)
 library(ggdist)
 library(ggplot2)
+library(tidyquant)
 library(gganimate)
 ```
 
@@ -183,7 +184,7 @@ hud_gif <- hud_long %>%
   transition_time(year) +
   labs(title = "Year: {frame_time}") 
 
-animate(hud_gif, height = 800, width = 800)
+animate(hud_gif, height = 1000, width = 1000)
 anim_save("hud_gif.gif")
 ```
 
