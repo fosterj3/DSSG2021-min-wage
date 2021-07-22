@@ -179,12 +179,12 @@ hud_gif <- hud_long %>%
         y = "Rental Price",
         fill = "Bedrooms") +
   theme(legend.position = "none") +
-  scale_y_discrete(limits = c(500,1500, 2000, 2500, 3000), labels=scales::dollar_format()) +
+  scale_y_discrete(limits = c(500, 1000, 1500, 2000, 2500, 3000), labels=scales::dollar_format()) +
     coord_flip() +
   transition_time(year) +
   labs(title = "Year: {frame_time}") 
 
-animate(hud_gif, height = 1000, width = 1000)
+animate(hud_gif, height = 4, width = 6, units = "in", res = 150)
 anim_save("hud_gif.gif")
 ```
 
