@@ -18,7 +18,7 @@ library(tidyr)
 library(stringr)
 library(ggdist)
 library(ggplot2)
-library(tidy)
+library(gganimate)
 ```
 
 ```{r}
@@ -38,7 +38,6 @@ hud10_11 <- hud10_11 %>% clean_names()
 hud15 <- hud15 %>% clean_names()
 hud16 <- hud16 %>% clean_names()
 hud17 <- hud17 %>% clean_names()
-
 ```
 
 ```{r}
@@ -54,7 +53,6 @@ hud14 <- hud14 %>%
 
 hud12_14 <- bind_rows(hud12, hud13, hud14) %>% clean_names() %>% 
   select(-c(state, state_name, county))
-
 ```
 
 ```{r}
@@ -135,10 +133,12 @@ hud_long$Bedrooms <- factor(hud_long$Bedrooms,
                          levels = c("Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four Bedrooms"))
 
 hud_long$region <- factor(hud_long$region)
+hud_long$year <- as.integer(hud_long$year)
+
 ```
 
 ```{r}
-hud_long %>%
+hud_gif <- hud_long %>%
     filter(region == "Seattle-Tacoma-Bellevue") %>% 
     ggplot(aes(x = factor(Bedrooms), y = Rent, fill = factor(Bedrooms))) +
 
@@ -177,8 +177,14 @@ hud_long %>%
         x = "Number of Bedrooms",
         y = "Rental Price",
         fill = "Bedrooms") +
-  scale_y_discrete(limits = c(400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400)) +
-    coord_flip() 
+  theme(legend.position = "none") +
+  scale_y_discrete(limits = c(500,1500, 2000, 2500, 3000), labels=scales::dollar_format()) +
+    coord_flip() +
+  transition_time(year) +
+  labs(title = "Year: {frame_time}") 
+
+animate(hud_gif, height = 800, width = 800)
+anim_save("hud_gif.gif")
 ```
 
 
