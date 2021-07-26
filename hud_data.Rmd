@@ -10,6 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+#clear memory
+rm(list = ls())
+
 # Packages Used 
 library(rio)
 library(dplyr)
@@ -35,15 +38,18 @@ hud17 <- import(file = "https://www.huduser.gov/portal/datasets/fmr/fmr2017/FY20
 ```
 
 ```{r}
-# Make the variable names lowercase 
+# Clean variable names using the janitor package 
 hud10_11 <- hud10_11 %>% clean_names()
+hud12 <- hud12 %>% clean_names()
+hud13 <- hud13 %>% clean_names()
+hud14 <- hud14 %>% clean_names()
 hud15 <- hud15 %>% clean_names()
 hud16 <- hud16 %>% clean_names()
 hud17 <- hud17 %>% clean_names()
 ```
 
 ```{r}
-#Combine hud 12-14 since they have the same variables 
+#Combine hud 12-14 since they have the same variable names
 hud12 <- hud12 %>% 
   mutate(year = 2012)
 
@@ -53,14 +59,14 @@ hud13 <- hud13 %>%
 hud14 <- hud14 %>% 
   mutate(year = 2014)
 
-hud12_14 <- bind_rows(hud12, hud13, hud14) %>% clean_names() %>% 
-  select(-c(state, state_name, county))
+hud12_14 <- bind_rows(hud12, hud13, hud14) %>%
+  select(-c(state, state_name))
 ```
 
 ```{r}
 # Rename and cut/add variables
 hud10_11 <- hud10_11 %>% 
-  select(-c(state, county)) %>% 
+  select(-c(state)) %>% 
 rename(
 cbsa = cbsamet) %>% 
   mutate(year = 2011)
@@ -69,7 +75,7 @@ cbsa = cbsamet) %>%
 ```{r}
 # Rename and cut/add variables
 hud15 <- hud15 %>% 
-  select(-c(state, statename, county)) %>% 
+  select(-c(state, statename)) %>% 
 rename(
 cbsa = cbsamet,
 county_name = cntyname,
@@ -118,6 +124,7 @@ hud_df <- hud_full %>%
   separate(cbsa_name, into = c("city", "region"), sep = ",") %>%
   mutate(region = str_trim(region)) %>% 
   filter(region == "WA MSA") %>% 
+  select(-county) %>% 
   rename(
     region = city,
     state = region) %>%
@@ -145,6 +152,14 @@ hud_long$Bedrooms <- factor(hud_long$Bedrooms,
 hud_long$region <- factor(hud_long$region)
 hud_long$year <- as.integer(hud_long$year)
 
+hud_long <- hud_long %>% mutate(zip = parse_number(zip))
+
+hud_long[hud_long == "Kennewick-Richland" ] <-  "Kennewick-Pasco-Richland"
+hud_long[hud_long == "Olympia" ] <-  "Olympia-Tumwater"
+hud_long[hud_long == "Spokane" ] <-  "Spokane-Spokane Valley"
+hud_long[hud_long == "Wenatchee" ] <-  "Wenatchee-East Wenatchee"
+      
+
 ```
 
 ```{r}
@@ -161,7 +176,7 @@ hud_long %>%
   filter(Bedrooms == "Two Bedrooms" & year != 2011) %>% 
   group_by(county, year) %>% 
   summarise(median_rent = median(Rent)) %>% 
-  mutate(percent_change = round(100*(median_rent - lag(median_rent))/lag(median_rent),2))
+  mutate(percent_change = round(100*(median_rent - lag(median_rent))/lag(median_rent),2)) 
   
 ```
 
@@ -174,34 +189,6 @@ Wage <- (c(1:2, 5000,4000,3000,2000))
 dummy <- data.frame(County, LowHighWage, Wage)
 dummy$County <- as.factor(dummy$County)
 dummy$LowHighWage <- as.numeric(dummy$LowHighWage)
-
-
-```
-
-```{r}
-dummy %>% 
-  group_by(County, LowHighWage) %>% 
-  summarise(n = n()) %>% 
-  mutate(freq = 100*n/sum(n)) %>% 
-  filter(LowHighWage == 1) 
-
-
-df %>%
-  count(Color, Gender) %>%
-  group_by(Color) %>%          # now required with changes to dplyr::count()
-  mutate(prop = prop.table(n))
-
-
-dummy %>% 
-  count(LowHighWage, as.factor(County))
-  group_by(County) %>% 
-  mutate(prop = prop.table(n)) 
-```
-
-```{r}
-dummy %>% 
-  group_by(County, LowHighWage) %>% 
-  mutate(percentchange = sum(LowHighWage)/nrow(dummy)*100)
 ```
 
 ```{r}
@@ -251,7 +238,7 @@ hud_gif <- hud_long %>%
   theme(legend.position = "none") +
   scale_y_discrete(limits = c(500, 1000, 1500, 2000, 2500, 3000), labels=scales::dollar_format()) +
   scale_fill_manual(values = kraken) +
-    coord_flip() + facet_wrap(~year)
+    coord_flip() + facet_wrap(~year) +
   transition_time(year) +
   labs(title = "Year: {frame_time}") 
 
@@ -259,6 +246,31 @@ animate(hud_gif, height = 4, width = 6, units = "in", res = 150)
 anim_save("hud_gif.gif")
 ```
 
+```{r}
+dummy %>% 
+  group_by(County, LowHighWage) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = 100*n/sum(n)) %>% 
+  filter(LowHighWage == 1) 
+
+
+df %>%
+  count(Color, Gender) %>%
+  group_by(Color) %>%          # now required with changes to dplyr::count()
+  mutate(prop = prop.table(n))
+
+
+dummy %>% 
+  count(LowHighWage, as.factor(County))
+  group_by(County) %>% 
+  mutate(prop = prop.table(n)) 
+```
+
+```{r}
+dummy %>% 
+  group_by(County, LowHighWage) %>% 
+  mutate(percentchange = sum(LowHighWage)/nrow(dummy)*100)
+```
 
 
 
