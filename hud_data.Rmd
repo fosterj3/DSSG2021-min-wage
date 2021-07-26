@@ -20,6 +20,7 @@ library(ggdist)
 library(ggplot2)
 library(tidyquant)
 library(gganimate)
+library(gghalves)
 ```
 
 ```{r}
@@ -95,7 +96,15 @@ rename(
 cbsa = metro_code,
 cbsa_name = metro_name,
 zip = zip_code) %>% 
-  mutate(year = 2017)
+  mutate(year = 2017) 
+  
+```
+
+```{r}
+#Add county to hud_17 data frame 
+hud17 <- left_join(hud17, hud16, by = "zip") %>% 
+  select(ends_with("x"), county_name, zip) %>% 
+  rename_at(.vars = vars(ends_with(".x")), .funs = funs(sub("[.]x$", "",.)))
 ```
 
 ```{r}
@@ -136,6 +145,63 @@ hud_long$Bedrooms <- factor(hud_long$Bedrooms,
 hud_long$region <- factor(hud_long$region)
 hud_long$year <- as.integer(hud_long$year)
 
+```
+
+```{r}
+# Write hud_long dataset 
+hud_long %>% 
+write.csv("hud_long.csv")
+```
+
+
+```{r}
+# Get Percent change in the rent prices by year 
+hud_long %>% 
+  filter(county %in% c("King County", "Pierce County", "Snohomish County")) %>% 
+  filter(Bedrooms == "Two Bedrooms" & year != 2011) %>% 
+  group_by(county, year) %>% 
+  summarise(median_rent = median(Rent)) %>% 
+  mutate(percent_change = round(100*(median_rent - lag(median_rent))/lag(median_rent),2))
+  
+```
+
+```{r}
+#What percentage of bedrooms are two bedrooms King County 
+County <- c("King","Pierce","Pierce","Snohomish","King","King")
+LowHighWage <- c(1, 1, 0,0,0,0)
+Wage <- (c(1:2, 5000,4000,3000,2000))
+  
+dummy <- data.frame(County, LowHighWage, Wage)
+dummy$County <- as.factor(dummy$County)
+dummy$LowHighWage <- as.numeric(dummy$LowHighWage)
+
+
+```
+
+```{r}
+dummy %>% 
+  group_by(County, LowHighWage) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = 100*n/sum(n)) %>% 
+  filter(LowHighWage == 1) 
+
+
+df %>%
+  count(Color, Gender) %>%
+  group_by(Color) %>%          # now required with changes to dplyr::count()
+  mutate(prop = prop.table(n))
+
+
+dummy %>% 
+  count(LowHighWage, as.factor(County))
+  group_by(County) %>% 
+  mutate(prop = prop.table(n)) 
+```
+
+```{r}
+dummy %>% 
+  group_by(County, LowHighWage) %>% 
+  mutate(percentchange = sum(LowHighWage)/nrow(dummy)*100)
 ```
 
 ```{r}
@@ -185,22 +251,13 @@ hud_gif <- hud_long %>%
   theme(legend.position = "none") +
   scale_y_discrete(limits = c(500, 1000, 1500, 2000, 2500, 3000), labels=scales::dollar_format()) +
   scale_fill_manual(values = kraken) +
-    coord_flip() +
+    coord_flip() + facet_wrap(~year)
   transition_time(year) +
   labs(title = "Year: {frame_time}") 
 
 animate(hud_gif, height = 4, width = 6, units = "in", res = 150)
 anim_save("hud_gif.gif")
 ```
-
-
-
-
-
-
-
-
-
 
 
 
